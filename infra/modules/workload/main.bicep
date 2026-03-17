@@ -165,6 +165,7 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-pr
 var githubRun_id string = last(split(deployment().name, '-'))
 module privateEndpoint './private-endpoint.bicep' = {
   name: 'deployPrivateEndpoint-${githubRun_id}'
+  scope: resourceGroup(network.resourceGroupName)
   params: {
     network: network
     configurationStoreResourceGroupName: workload.resourceGroupName
