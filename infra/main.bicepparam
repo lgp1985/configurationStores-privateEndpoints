@@ -29,15 +29,15 @@ param network = {
 }
 
 param workload = {
-  resourceGroupName: 'rg-lg-workload-temp1'
+  resourceGroupName: 'rg-lgp-workload-temp1'
   logAnalyticsWorkspaceName: 'law-temp1'
   applicationInsightsName: 'appi-temp1'
-  keyVaultName: 'kv-temp1'
+  keyVaultName: 'kv-lgp-temp1'
   appServicePlanName: 'asp-temp1'
-  webAppName: 'webapp-temp1'
+  webAppName: 'webapp-lgp-temp1'
   userAssignedIdentityName: 'uai-temp1'
   configurationStore: {
-    name: 'appcs-temp1'
+    name: 'appcs-lgp-temp1'
     privateEndpoint: {
       name: 'pe-appcs-temp1'
       customNetworkInterfaceName: 'nic-pe-appcs-temp1'
