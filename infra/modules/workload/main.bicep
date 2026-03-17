@@ -130,7 +130,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' = {
+resource configurationStore 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' = {
   name: workload.configurationStore.name
   location: resourceGroup().location
   sku: {
@@ -151,6 +151,7 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-pr
   }
 }
 
+
 @description('The GitHub Actions run ID for this deployment')
 var githubRun_id string = last(split(deployment().name, '-'))
 module privateEndpoint './private-endpoint.bicep' = {
@@ -162,7 +163,7 @@ module privateEndpoint './private-endpoint.bicep' = {
     configurationStore: workload.configurationStore
   }
   dependsOn: [
-    appConfig
+    configurationStore
   ]
 }
 

@@ -75,7 +75,7 @@ resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2
   location: resourceGroup().location
 }
 
-resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' existing = {
+resource configurationStoreResource 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' existing = {
   name: configurationStore.name
   scope: resourceGroup(configurationStoreResourceGroupName)
 }
@@ -97,7 +97,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2025-05-01' = {
       {
         name: join(['pe', configurationStore.privateEndpoint.name, configurationStore.name], '-')
         properties: {
-          privateLinkServiceId: appConfig.id
+          privateLinkServiceId: configurationStoreResource.id
           groupIds: [
             'configurationStores'
           ]
