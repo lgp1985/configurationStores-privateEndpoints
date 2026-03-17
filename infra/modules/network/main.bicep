@@ -2,10 +2,36 @@ import * as types from '../types.bicep'
 param network types.networkParams
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2025-05-01' = {
-  name: network.networkSecurityGroupName
+  name: network.networkSecurityGroup.name
   location: resourceGroup().location
   properties: {
     securityRules: []
+  }
+}
+
+resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' = {
+  name: network.applicationSecurityGroup.name
+  location: resourceGroup().location
+}
+
+resource allowPrivateEndpointAccess 'Microsoft.Network/networkSecurityGroups/securityRules@2025-05-01' = {
+  parent: networkSecurityGroup
+  name: network.applicationSecurityGroup.securityRules.name
+  properties: {
+    access: 'Allow'
+    destinationApplicationSecurityGroups: [
+      {
+        id: ApplicationSecurityGroup.id
+      }
+    ]
+    destinationPortRanges: network.applicationSecurityGroup.securityRules.destinationPortRanges
+    direction: 'Inbound'
+    priority: network.applicationSecurityGroup.securityRules.priority
+    protocol: 'Tcp'
+    sourceAddressPrefixes: network.applicationSecurityGroup.securityRules.sourceAddressPrefixes
+    sourcePortRanges: [
+      '*'
+    ]
   }
 }
 
