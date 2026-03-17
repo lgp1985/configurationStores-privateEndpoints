@@ -50,6 +50,9 @@ type workloadParams = {
 type privateEndpointParam = {
   name: string
   customNetworkInterfaceName: string
+  subnetName: string
+  addressPrefixes: string[]
+  applicationSecurityGroupName: string
 }
 
 @export()

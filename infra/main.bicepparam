@@ -40,7 +40,10 @@ param workload = {
     name: 'appcs-lgp-temp1'
     privateEndpoint: {
       name: 'pe-appcs-temp1'
-      customNetworkInterfaceName: 'nic-pe-appcs-temp1'
+      subnetName: 'snet-appcs-temp1'
+      addressPrefixes: ['10.0.1.96/27']
+      customNetworkInterfaceName: 'pe-appcs-temp1-nic'
+      applicationSecurityGroupName: 'asg-appcs-temp1'
     }
   }
   secretName: 'secret-temp1'
