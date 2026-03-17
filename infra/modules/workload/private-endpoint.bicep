@@ -9,7 +9,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-05-01' existing 
 resource virtualNetwork_AzureFirewallSubnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = {
   // this is out-of-box
   parent: virtualNetwork
-  name: 'AzureFirewallSubnet'
+  name: network.subnetName
 }
 
 // resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' existing = {
