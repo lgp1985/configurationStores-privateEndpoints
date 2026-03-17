@@ -28,7 +28,7 @@ jobs:
           operation: create
           scope: subscription
           name: main-${{ github.run_id }}
-          location: eastus2
+          location: Central US
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           template-file: infra/main.bicep
           parameters-file: infra/main.bicepparam
