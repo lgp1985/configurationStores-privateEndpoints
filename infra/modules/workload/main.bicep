@@ -185,6 +185,12 @@ resource webAppAppSettings 'Microsoft.Web/sites/config@2025-03-01' = {
   kind: 'string'
   parent: webApp
   properties: {
+    Azure__ManagedIdentityClientId: UserAssignedIdentity.properties.clientId
+    Endpoints__AppConfiguration: configurationStore.properties.endpoint
+    AppConfiguration__Keys__Message: 'SampleApp:Settings:Message'
+    AppConfiguration__Keys__KeyVaultReference: 'SampleApp:Settings:KeyVaultMessage'
+    KeyVault__VaultUri: keyVault.properties.vaultUri
+    KeyVault__SecretName: workload.secretName
     secret__temp1: '@Microsoft.KeyVault(SecretUri=${secret.properties.secretUri})'
     APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
 
@@ -194,5 +200,6 @@ resource webAppAppSettings 'Microsoft.Web/sites/config@2025-03-01' = {
   }
   dependsOn: [
     roleKeyVaultUserAssignedIdentity
+    roleAppConfigurationDataReaderUserAssignedIdentity
   ]
 }

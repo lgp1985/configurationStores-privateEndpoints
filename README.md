@@ -39,6 +39,7 @@ At a high level, the Bicep in this repo deploys:
 - `infra/modules/workload/main.bicep`: Key Vault, identity, App Service, monitoring, and App Configuration.
 - `infra/modules/workload/private-endpoint.bicep`: App Configuration Private Endpoint, dedicated subnet, ASG, private DNS zone, and VNet link.
 - `infra/modules/types.bicep`: shared parameter types.
+- `src/AppConfigKeyVaultSample`: sample ASP.NET Core application that reads Azure App Configuration and Azure Key Vault with `DefaultAzureCredential`.
 
 ## Architecture Summary
 
@@ -170,12 +171,20 @@ That is useful if you want network ownership and application ownership to be spl
 
 ### The web app is VNet integrated, but the sample does not include application code that reads App Configuration
 
-The infrastructure proves how to create the App Configuration store and its private endpoint. It does not yet include:
+The infrastructure now includes a separate sample application under `src/AppConfigKeyVaultSample`. It demonstrates:
 
-- an app that connects to App Configuration through the private endpoint
-- application settings such as an App Configuration endpoint for SDK-based configuration loading
+- reading a value from Azure App Configuration with `DefaultAzureCredential`
+- resolving an App Configuration Key Vault reference with `DefaultAzureCredential`
+- reading a secret directly from Azure Key Vault with `SecretClient`
 
-The user-assigned managed identity is granted the `App Configuration Data Reader` role on the App Configuration store, so the remaining step is application-side SDK integration.
+The deployment also sets matching App Service settings for:
+
+- `Azure__ManagedIdentityClientId`
+- `Endpoints__AppConfiguration`
+- `KeyVault__VaultUri`
+- `KeyVault__SecretName`
+
+That keeps the sample application configuration aligned with the deployed infrastructure while allowing the sample code to use an explicit `ManagedIdentityCredential` in Azure.
 
 ### Key Vault is restricted by network ACLs, but it is not using a private endpoint in this sample
 
@@ -222,7 +231,6 @@ The Bicep files in `infra/` currently show no compile or lint errors in the work
 Common next steps for this repository would be:
 
 - add a private endpoint for Key Vault if you want both services to use Private Link consistently
-- add a sample application that reads App Configuration and Key Vault using `DefaultAzureCredential`
 - add deployment validation with `what-if` or CI checks
 - add DNS and routing guidance for hybrid connectivity scenarios
 
