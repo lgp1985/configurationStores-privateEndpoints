@@ -42,3 +42,5 @@ module workloadDeployment './modules/workload/main.bicep' = {
 }
 @description('The GitHub Actions run ID for this deployment, same as input deployment name split by "-" and taking the last part')
 output githubRunId string = githubRun_id
+output webAppName string = workloadDeployment.outputs.webAppName
+output workloadResourceGroupName string = workloadDeployment.outputs.workloadResourceGroupName

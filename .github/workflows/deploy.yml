@@ -4,6 +4,9 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  DOTNET_VERSION: 8.0.x
+  PROJECT_PATH: src/AppConfigKeyVaultSample/AppConfigKeyVaultSample.csproj
+  PUBLISH_PATH: src/AppConfigKeyVaultSample/publish
 permissions:
   id-token: write
   contents: read
@@ -11,6 +14,8 @@ permissions:
 jobs:
   deployment-step:
     runs-on: ubuntu-latest
+    outputs:
+      web_app_name: ${{ steps.deployment-outputs.outputs.web_app_name }}
 
     steps:
       - uses: actions/checkout@v6
@@ -32,3 +37,40 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           template-file: infra/main.bicep
           parameters-file: infra/main.bicepparam
+
+      - name: Resolve deployment outputs
+        id: deployment-outputs
+        shell: bash
+        run: |
+          web_app_name=$(az deployment sub show \
+            --name main-${{ github.run_id }} \
+            --query "properties.outputs.webAppName.value" \
+            --output tsv)
+
+          echo "web_app_name=${web_app_name}" >> "$GITHUB_OUTPUT"
+
+  release-step:
+    runs-on: ubuntu-latest
+    needs: deployment-step
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish application
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --output ${{ env.PUBLISH_PATH }}
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+
+      - name: Deploy published app to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.deployment-step.outputs.web_app_name }}
+          package: ${{ env.PUBLISH_PATH }}

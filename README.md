@@ -140,12 +140,17 @@ The workflow:
 
 - runs on `push`
 - can also be triggered manually through `workflow_dispatch`
+- installs the .NET SDK and builds the sample app in `src/AppConfigKeyVaultSample`
 - signs in to Azure with `azure/login@v3`
 - deploys the subscription-scope Bicep template with `azure/bicep-deploy@v2`
+- reads the deployed `webAppName` and `workloadResourceGroupName` from template outputs
+- publishes the sample app and deploys the published asset to the Azure Web App with `azure/webapps-deploy@v3`
 - uses `infra/main.bicep` and `infra/main.bicepparam`
 - deploys to the `Central US` location
 
 The deployment name is generated as `main-${{ github.run_id }}`, which matches the Bicep logic that derives the run identifier from the deployment name.
+
+The sample application that gets deployed is `src/AppConfigKeyVaultSample/AppConfigKeyVaultSample.csproj`.
 
 Before running the workflow, update the names in `infra/main.bicepparam` so they are globally unique where required, especially:
 

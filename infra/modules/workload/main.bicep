@@ -203,3 +203,6 @@ resource webAppAppSettings 'Microsoft.Web/sites/config@2025-03-01' = {
     roleAppConfigurationDataReaderUserAssignedIdentity
   ]
 }
+
+output webAppName string = webApp.name
+output workloadResourceGroupName string = resourceGroup().name
