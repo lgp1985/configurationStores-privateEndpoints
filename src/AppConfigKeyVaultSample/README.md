@@ -8,6 +8,7 @@ It demonstrates:
 - switching to an explicit `ManagedIdentityCredential` in Azure-hosted environments
 - resolving App Configuration Key Vault references with the same credential
 - reading a secret directly from Azure Key Vault with `SecretClient`
+- comparing the direct Key Vault read with the `secret__temp1` App Service Key Vault reference so users can verify both values match
 
 ## Configuration
 
@@ -33,6 +34,12 @@ dotnet run --project src/AppConfigKeyVaultSample/AppConfigKeyVaultSample.csproj
 ```
 
 Browse to `/` to see the values loaded from App Configuration and Key Vault.
+
+The response also includes a `comparison` section that shows:
+
+- the value read directly from Key Vault using `KeyVault:SecretName`
+- the value resolved by App Service from the `secret__temp1` Key Vault reference
+- a `valuesMatch` flag so users can confirm both retrieval paths return the same secret
 
 ## Expected App Configuration Keys
 

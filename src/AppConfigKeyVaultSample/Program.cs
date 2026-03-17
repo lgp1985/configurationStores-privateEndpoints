@@ -28,7 +28,11 @@ app.MapGet("/", async (IConfiguration configuration, IHostEnvironment environmen
 {
 	var messageKey = configuration["AppConfiguration:Keys:Message"] ?? "SampleApp:Settings:Message";
 	var keyVaultReferenceKey = configuration["AppConfiguration:Keys:KeyVaultReference"] ?? "SampleApp:Settings:KeyVaultMessage";
+	var appServiceKeyVaultReferenceValue = configuration["secret:temp1"];
 	var keyVaultSecret = await secretReader.ReadAsync(cancellationToken);
+	var valuesMatch = !string.IsNullOrWhiteSpace(appServiceKeyVaultReferenceValue)
+		&& !string.IsNullOrWhiteSpace(keyVaultSecret.Value)
+		&& string.Equals(appServiceKeyVaultReferenceValue, keyVaultSecret.Value, StringComparison.Ordinal);
 
 	return Results.Ok(new
 	{
@@ -51,6 +55,14 @@ app.MapGet("/", async (IConfiguration configuration, IHostEnvironment environmen
 			keyVaultSecret.SecretName,
 			keyVaultSecret.Value,
 			keyVaultSecret.Error
+		},
+		comparison = new
+		{
+			directSecretName = configuration["KeyVault:SecretName"],
+			directSecretValue = keyVaultSecret.Value,
+			appServiceKeyVaultReferenceKey = "secret:temp1",
+			appServiceKeyVaultReferenceValue,
+			valuesMatch
 		}
 	});
 });
