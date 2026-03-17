@@ -6,23 +6,23 @@ param network = {
   virtualNetworkName: 'vnet-temp1'
   networkSecurityGroupName: 'nsg-temp1'
   subnetName: 'snet-kv-web-temp1'
-  applicationSecurityGroup: {
-    name: 'asg-kv-web-temp1'
-    securityRules: {
-      name: 'allow-inbound-Inbound-temp1'
-      priority: 100
-      sourceAddressPrefixes: [
-        '10.241.144.0/20'
-        '10.241.192.0/18'
-        '10.243.192.0/19'
-        '10.238.24.0/21'
-        '10.238.17.0/24'
-      ]
-      destinationPortRanges: [
-        '443'
-      ]
-    }
-  }
+  // applicationSecurityGroup: {
+  //   name: 'asg-kv-web-temp1'
+  //   securityRules: {
+  //     name: 'allow-inbound-Inbound-temp1'
+  //     priority: 100
+  //     sourceAddressPrefixes: [
+  //       '10.241.144.0/20'
+  //       '10.241.192.0/18'
+  //       '10.243.192.0/19'
+  //       '10.238.24.0/21'
+  //       '10.238.17.0/24'
+  //     ]
+  //     destinationPortRanges: [
+  //       '443'
+  //     ]
+  //   }
+  // }
   networkSecurityGroup: {
     name: 'nsg-temp1'
   }

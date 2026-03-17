@@ -11,7 +11,7 @@ type networkParams = {
   virtualNetworkName: string
   networkSecurityGroupName: string
   subnetName: string
-  applicationSecurityGroup: applicationSecurityGroupParam
+  // applicationSecurityGroup: applicationSecurityGroupParam
   networkSecurityGroup: networkSecurityGroupParam
 }
 
@@ -19,17 +19,17 @@ type networkSecurityGroupParam = {
   name: string
 }
 
-type securityRulesParam = {
-  name: string
-  destinationPortRanges: string[]
-  sourceAddressPrefixes: string[]
-  priority: int
-}
+// type securityRulesParam = {
+//   name: string
+//   destinationPortRanges: string[]
+//   sourceAddressPrefixes: string[]
+//   priority: int
+// }
 
-type applicationSecurityGroupParam = {
-  name: string
-  securityRules: securityRulesParam
-}
+// type applicationSecurityGroupParam = {
+//   name: string
+//   securityRules: securityRulesParam
+// }
 
 // Define the resource parameters for the workload module
 @export()
