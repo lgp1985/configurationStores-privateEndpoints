@@ -87,8 +87,8 @@ resource webApp 'Microsoft.Web/sites@2025-03-01' = {
     keyVaultReferenceIdentity: UserAssignedIdentity.id
     siteConfig: {
       minTlsVersion: '1.3'
-      netFrameworkVersion: 'v8.0'
-      linuxFxVersion: 'DOTNETCORE|8.0'
+      netFrameworkVersion: 'v10.0'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       use32BitWorkerProcess: false
       ftpsState: 'FtpsOnly'
       http20Enabled: true
