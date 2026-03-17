@@ -72,6 +72,7 @@ resource virtualNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLin
 
 resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' = {
   name: configurationStore.privateEndpoint.applicationSecurityGroupName
+  location: resourceGroup().location
 }
 
 
