@@ -17,15 +17,23 @@ builder.Services.AddOpenTelemetry()
         { "service.instance.id", Environment.GetEnvironmentVariable("SERVICE_INSTANCE_ID")!}}.Where(d => d.Value is not null).ToDictionary()));
 
 var credential = CreateCredential(builder.Environment, builder.Configuration);
-var appConfigurationEndpoint = builder.Configuration["Endpoints:AppConfiguration"];
+builder.Services.AddSingleton<TokenCredential>(credential);
+builder.Services.AddSingleton<KeyVaultSecretReader>();
+
+var app = builder.Build();
+
+var appConfigurationEndpoint = app.Configuration["Endpoints:AppConfiguration"];
 
 if (!string.IsNullOrWhiteSpace(appConfigurationEndpoint))
 {
+    app.Logger.LogInformation("Azure App Configuration endpoint detected. Starting bootstrap for {AppConfigurationEndpoint}.", appConfigurationEndpoint);
+
     await AppConfigurationBootstrapper.EnsureSettingsExistAsync(
-        builder.Configuration,
+        app.Configuration,
         new Uri(appConfigurationEndpoint),
         credential,
-        builder.Environment,
+        app.Environment,
+        app.Logger,
         CancellationToken.None
     );
 
@@ -37,12 +45,13 @@ if (!string.IsNullOrWhiteSpace(appConfigurationEndpoint))
             keyVaultOptions.SetCredential(credential);
         });
     });
+
+    app.Logger.LogInformation("Azure App Configuration provider added for {AppConfigurationEndpoint}.", appConfigurationEndpoint);
 }
-
-builder.Services.AddSingleton<TokenCredential>(credential);
-builder.Services.AddSingleton<KeyVaultSecretReader>();
-
-var app = builder.Build();
+else
+{
+    app.Logger.LogInformation("No Azure App Configuration endpoint configured. Skipping bootstrap.");
+}
 
 app.MapGet("/", async (IConfiguration configuration, IHostEnvironment environment, KeyVaultSecretReader secretReader, CancellationToken cancellationToken) =>
 {
@@ -148,10 +157,12 @@ sealed class AppConfigurationBootstrapper
         Uri appConfigurationEndpoint,
         TokenCredential credential,
         IHostEnvironment environment,
+        ILogger logger,
         CancellationToken cancellationToken)
     {
         if (environment.IsDevelopment())
         {
+            logger.LogInformation("Skipping Azure App Configuration bootstrap in Development environment.");
             return;
         }
 
@@ -162,23 +173,42 @@ sealed class AppConfigurationBootstrapper
 
         if (string.IsNullOrWhiteSpace(keyVaultSecretUri))
         {
+            logger.LogWarning("Skipping Azure App Configuration bootstrap because Key Vault secret URI could not be built. Configure KeyVault:VaultUri and KeyVault:SecretName.");
             return;
         }
 
-        var client = new ConfigurationClient(appConfigurationEndpoint, credential);
+        logger.LogInformation(
+            "Ensuring Azure App Configuration bootstrap settings exist at {AppConfigurationEndpoint}. MessageKey: {MessageKey}, KeyVaultReferenceKey: {KeyVaultReferenceKey}.",
+            appConfigurationEndpoint,
+            messageKey,
+            keyVaultReferenceKey);
 
-        await client.SetConfigurationSettingAsync(
-            new ConfigurationSetting(messageKey, messageValue),
-            cancellationToken: cancellationToken
-        );
+        try
+        {
+            var client = new ConfigurationClient(appConfigurationEndpoint, credential);
 
-        await client.SetConfigurationSettingAsync(
-            new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(new { uri = keyVaultSecretUri }))
-            {
-                ContentType = KeyVaultReferenceContentType
-            },
-            cancellationToken: cancellationToken
-        );
+            await client.SetConfigurationSettingAsync(
+                new ConfigurationSetting(messageKey, messageValue),
+                cancellationToken: cancellationToken
+            );
+
+            logger.LogInformation("Ensured Azure App Configuration setting {MessageKey}.", messageKey);
+
+            await client.SetConfigurationSettingAsync(
+                new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(new { uri = keyVaultSecretUri }))
+                {
+                    ContentType = KeyVaultReferenceContentType
+                },
+                cancellationToken: cancellationToken
+            );
+
+            logger.LogInformation("Ensured Azure App Configuration Key Vault reference {KeyVaultReferenceKey}.", keyVaultReferenceKey);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to bootstrap Azure App Configuration settings at {AppConfigurationEndpoint}.", appConfigurationEndpoint);
+            throw;
+        }
     }
 
     private static string? BuildKeyVaultSecretUri(IConfiguration configuration)
