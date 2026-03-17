@@ -12,9 +12,9 @@ resource virtualNetwork_AzureFirewallSubnet 'Microsoft.Network/virtualNetworks/s
   name: 'AzureFirewallSubnet'
 }
 
-resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' existing = {
-  name: network.applicationSecurityGroup.name
-}
+// resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' existing = {
+//   name: network.applicationSecurityGroup.name
+// }
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' existing = {
   name: configurationStore.name
@@ -29,11 +29,11 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2025-05-01' = {
     subnet: {
       id: virtualNetwork_AzureFirewallSubnet.id
     }
-    applicationSecurityGroups: [
-      {
-        id: ApplicationSecurityGroup.id
-      }
-    ]
+    // applicationSecurityGroups: [
+    //   {
+    //     id: ApplicationSecurityGroup.id
+    //   }
+    // ]
     privateLinkServiceConnections: [
       {
         name: join(['pe', configurationStore.privateEndpoint.name, configurationStore.name], '-')
