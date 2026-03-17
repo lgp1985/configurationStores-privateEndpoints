@@ -27,13 +27,6 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
 
-      - name: Resolve deployment principal object ID
-        id: deployment-principal
-        shell: bash
-        run: |
-          object_id=$(az ad sp show --id "${{ vars.AZURE_CLIENT_ID }}" --query id --output tsv)
-          echo "object_id=${object_id}" >> "$GITHUB_OUTPUT"
-
       - uses: azure/bicep-deploy@v2
         id: bicep-resources-deploy
         with:
@@ -45,8 +38,6 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           template-file: infra/main.bicep
           parameters-file: infra/main.bicepparam
-          parameters: |
-            deploymentPrincipalObjectId=${{ steps.deployment-principal.outputs.object_id }}
 
       - name: Resolve deployment outputs
         id: deployment-outputs
