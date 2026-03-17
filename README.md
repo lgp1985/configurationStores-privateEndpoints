@@ -173,10 +173,9 @@ That is useful if you want network ownership and application ownership to be spl
 The infrastructure proves how to create the App Configuration store and its private endpoint. It does not yet include:
 
 - an app that connects to App Configuration through the private endpoint
-- a data-plane role assignment for the web app identity to read from App Configuration
 - application settings such as an App Configuration endpoint for SDK-based configuration loading
 
-If you want the app itself to read from App Configuration, the next step is usually to grant an App Configuration data-plane role to the managed identity and use the Azure App Configuration SDK with managed identity.
+The user-assigned managed identity is granted the `App Configuration Data Reader` role on the App Configuration store, so the remaining step is application-side SDK integration.
 
 ### Key Vault is restricted by network ACLs, but it is not using a private endpoint in this sample
 
@@ -223,7 +222,6 @@ The Bicep files in `infra/` currently show no compile or lint errors in the work
 Common next steps for this repository would be:
 
 - add a private endpoint for Key Vault if you want both services to use Private Link consistently
-- add App Configuration data-plane RBAC for the managed identity used by the application
 - add a sample application that reads App Configuration and Key Vault using `DefaultAzureCredential`
 - add deployment validation with `what-if` or CI checks
 - add DNS and routing guidance for hybrid connectivity scenarios

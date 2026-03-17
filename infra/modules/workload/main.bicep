@@ -151,6 +151,19 @@ resource configurationStore 'Microsoft.AppConfiguration/configurationStores@2025
   }
 }
 
+resource roleAppConfigurationDataReaderUserAssignedIdentity 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(configurationStore.id, UserAssignedIdentity.id, '516239f1-63e1-4d78-a4de-a74fb236a071') // App Configuration Data Reader
+  scope: configurationStore
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '516239f1-63e1-4d78-a4de-a74fb236a071'
+    ) // App Configuration Data Reader
+    principalId: UserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 
 @description('The GitHub Actions run ID for this deployment')
 var githubRun_id string = last(split(deployment().name, '-'))
