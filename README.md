@@ -182,12 +182,12 @@ The infrastructure now includes a separate sample application under `src/AppConf
 - resolving an App Configuration Key Vault reference with `DefaultAzureCredential`
 - reading a secret directly from Azure Key Vault with `SecretClient`
 
-The workload deployment also seeds the App Configuration store with the keys expected by the sample application:
+The sample application bootstraps the App Configuration store with the keys expected by the sample app when it starts in Azure:
 
 - `SampleApp:Settings:Message`
 - `SampleApp:Settings:KeyVaultMessage`
 
-The second key is created as an App Configuration Key Vault reference that points to the Key Vault secret created by the same Bicep deployment.
+The second key is written as an App Configuration Key Vault reference that points to the Key Vault secret.
 
 The deployment also sets matching App Service settings for:
 

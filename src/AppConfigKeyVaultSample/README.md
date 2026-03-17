@@ -6,6 +6,7 @@ It demonstrates:
 
 - reading regular settings from Azure App Configuration with `DefaultAzureCredential` during local development
 - switching to an explicit `ManagedIdentityCredential` in Azure-hosted environments
+- bootstrapping required App Configuration keys at startup in Azure-hosted environments
 - resolving App Configuration Key Vault references with the same credential
 - reading a secret directly from Azure Key Vault with `SecretClient`
 - comparing the direct Key Vault read with the `secret__temp1` App Service Key Vault reference so users can verify both values match
@@ -46,4 +47,9 @@ The response also includes a `comparison` section that shows:
 - `SampleApp:Settings:Message`
 - `SampleApp:Settings:KeyVaultMessage`
 
-The second key is expected to be an App Configuration Key Vault reference if you want to demonstrate App Configuration resolving Key Vault-backed values.
+When the app runs outside `Development`, it bootstraps these keys on startup if they don't exist yet:
+
+- `SampleApp:Settings:Message` gets a plain text value
+- `SampleApp:Settings:KeyVaultMessage` gets an App Configuration Key Vault reference to `KeyVault:SecretName`
+
+The managed identity used by the app must have `App Configuration Data Owner` on the store for bootstrap writes.
