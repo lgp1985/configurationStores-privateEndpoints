@@ -15,7 +15,6 @@ if (!string.IsNullOrWhiteSpace(appConfigurationEndpoint))
 		builder.Configuration,
 		new Uri(appConfigurationEndpoint),
 		credential,
-		builder.Logging.CreateLogger("AppConfigurationBootstrapper"),
 		builder.Environment,
 		CancellationToken.None
 	);
@@ -82,66 +81,6 @@ app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
 
-sealed class AppConfigurationBootstrapper
-{
-	private const string KeyVaultReferenceContentType = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8";
-
-	public static async Task EnsureSettingsExistAsync(
-		IConfiguration configuration,
-		Uri appConfigurationEndpoint,
-		TokenCredential credential,
-		ILogger logger,
-		IHostEnvironment environment,
-		CancellationToken cancellationToken)
-	{
-		if (environment.IsDevelopment())
-		{
-			return;
-		}
-
-		var messageKey = configuration["AppConfiguration:Keys:Message"] ?? "SampleApp:Settings:Message";
-		var keyVaultReferenceKey = configuration["AppConfiguration:Keys:KeyVaultReference"] ?? "SampleApp:Settings:KeyVaultMessage";
-		var messageValue = configuration["AppConfiguration:Bootstrap:MessageValue"] ?? "Hello from Azure App Configuration.";
-		var keyVaultSecretUri = BuildKeyVaultSecretUri(configuration);
-
-		if (string.IsNullOrWhiteSpace(keyVaultSecretUri))
-		{
-			logger.LogWarning("Skipping App Configuration bootstrap because KeyVault:VaultUri or KeyVault:SecretName is missing.");
-			return;
-		}
-
-		var client = new ConfigurationClient(appConfigurationEndpoint, credential);
-
-		await client.SetConfigurationSettingAsync(
-			new ConfigurationSetting(messageKey, messageValue),
-			cancellationToken
-		);
-
-		await client.SetConfigurationSettingAsync(
-			new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(new { uri = keyVaultSecretUri }))
-			{
-				ContentType = KeyVaultReferenceContentType
-			},
-			cancellationToken
-		);
-
-		logger.LogInformation("Bootstrapped App Configuration keys {MessageKey} and {ReferenceKey}.", messageKey, keyVaultReferenceKey);
-	}
-
-	private static string? BuildKeyVaultSecretUri(IConfiguration configuration)
-	{
-		var vaultUri = configuration["KeyVault:VaultUri"];
-		var secretName = configuration["KeyVault:SecretName"];
-
-		if (string.IsNullOrWhiteSpace(vaultUri) || string.IsNullOrWhiteSpace(secretName))
-		{
-			return null;
-		}
-
-		return $"{vaultUri.TrimEnd('/')}/secrets/{secretName}";
-	}
-}
-
 static TokenCredential CreateCredential(IHostEnvironment environment, IConfiguration configuration)
 {
 	if (environment.IsDevelopment())
@@ -189,3 +128,59 @@ sealed class KeyVaultSecretReader(IConfiguration configuration, TokenCredential 
 }
 
 sealed record KeyVaultSecretResult(string? SecretName, string? Value, string? Error);
+
+sealed class AppConfigurationBootstrapper
+{
+	private const string KeyVaultReferenceContentType = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8";
+
+	public static async Task EnsureSettingsExistAsync(
+		IConfiguration configuration,
+		Uri appConfigurationEndpoint,
+		TokenCredential credential,
+		IHostEnvironment environment,
+		CancellationToken cancellationToken)
+	{
+		if (environment.IsDevelopment())
+		{
+			return;
+		}
+
+		var messageKey = configuration["AppConfiguration:Keys:Message"] ?? "SampleApp:Settings:Message";
+		var keyVaultReferenceKey = configuration["AppConfiguration:Keys:KeyVaultReference"] ?? "SampleApp:Settings:KeyVaultMessage";
+		var messageValue = configuration["AppConfiguration:Bootstrap:MessageValue"] ?? "Hello from Azure App Configuration.";
+		var keyVaultSecretUri = BuildKeyVaultSecretUri(configuration);
+
+		if (string.IsNullOrWhiteSpace(keyVaultSecretUri))
+		{
+			return;
+		}
+
+		var client = new ConfigurationClient(appConfigurationEndpoint, credential);
+
+		await client.SetConfigurationSettingAsync(
+			new ConfigurationSetting(messageKey, messageValue),
+			cancellationToken: cancellationToken
+		);
+
+		await client.SetConfigurationSettingAsync(
+			new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(new { uri = keyVaultSecretUri }))
+			{
+				ContentType = KeyVaultReferenceContentType
+			},
+			cancellationToken: cancellationToken
+		);
+	}
+
+	private static string? BuildKeyVaultSecretUri(IConfiguration configuration)
+	{
+		var vaultUri = configuration["KeyVault:VaultUri"];
+		var secretName = configuration["KeyVault:SecretName"];
+
+		if (string.IsNullOrWhiteSpace(vaultUri) || string.IsNullOrWhiteSpace(secretName))
+		{
+			return null;
+		}
+
+		return $"{vaultUri.TrimEnd('/')}/secrets/{secretName}";
+	}
+}
