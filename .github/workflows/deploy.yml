@@ -32,7 +32,3 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           template-file: infra/main.bicep
           parameters-file: infra/main.bicepparam
-          parameters: >
-            {
-              "githubRun_id": "${{ github.run_id }}"
-            }
