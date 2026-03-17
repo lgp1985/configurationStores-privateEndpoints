@@ -1,6 +1,7 @@
 import * as types from './modules/types.bicep'
 param network types.networkParams
 param workload types.workloadParams
+param deploymentPrincipalObjectId string = ''
 
 @description('The GitHub Actions run ID for this deployment')
 var githubRun_id string = last(split(deployment().name, '-'))
@@ -35,6 +36,7 @@ module workloadDeployment './modules/workload/main.bicep' = {
   params: {
     workload: workload
     network: network
+    deploymentPrincipalObjectId: deploymentPrincipalObjectId
   }
   dependsOn: [
     networkDeployment

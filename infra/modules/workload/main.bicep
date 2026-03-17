@@ -1,6 +1,7 @@
 import * as types from '../types.bicep'
 param workload types.workloadParams
 param network types.networkParams
+param deploymentPrincipalObjectId string = ''
 
 resource networkResourceGroup 'Microsoft.Resources/resourceGroups@2024-07-01' existing = {
   name: network.resourceGroupName
@@ -145,9 +146,26 @@ resource configurationStore 'Microsoft.AppConfiguration/configurationStores@2025
   properties: {
     disableLocalAuth: true
     publicNetworkAccess: 'Disabled'
+    dataPlaneProxy: {
+      authenticationMode: 'Pass-through'
+      privateLinkDelegation: 'Enabled'
+    }
     telemetry: {
       resourceId: applicationInsights.id
     }
+  }
+}
+
+resource roleAppConfigurationDataOwnerDeploymentPrincipal 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(deploymentPrincipalObjectId)) {
+  name: guid(configurationStore.id, deploymentPrincipalObjectId, '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b') // App Configuration Data Owner
+  scope: configurationStore
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b'
+    ) // App Configuration Data Owner
+    principalId: deploymentPrincipalObjectId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -160,6 +178,9 @@ resource configurationStoreMessageKey 'Microsoft.AppConfiguration/configurationS
       source: 'bicep-sample'
     }
   }
+  dependsOn: [
+    roleAppConfigurationDataOwnerDeploymentPrincipal
+  ]
 }
 
 resource configurationStoreKeyVaultReferenceKey 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
@@ -174,6 +195,9 @@ resource configurationStoreKeyVaultReferenceKey 'Microsoft.AppConfiguration/conf
       source: 'bicep-sample'
     }
   }
+  dependsOn: [
+    roleAppConfigurationDataOwnerDeploymentPrincipal
+  ]
 }
 
 resource roleAppConfigurationDataReaderUserAssignedIdentity 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
