@@ -38,13 +38,13 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' = {
   }
 }
 
-resource privatelink_azconfig_io 'Microsoft.Network/privateDnsZones@2018-09-01' = {
+resource privatelink_azconfig_io 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: 'privatelink.azconfig.io'
   location: 'global'
   tags: {}
   properties: {}
 }
-resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2021-05-01' = {
+resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2025-05-01' = {
   parent: privateEndpoint
   name: 'default'
   properties: {
@@ -58,7 +58,7 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
     ]
   }
 }
-resource virtualNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+resource virtualNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
   parent: privatelink_azconfig_io
   name: uniqueString(virtualNetwork.id)
   location: 'global'
@@ -74,11 +74,6 @@ resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2
   name: configurationStore.privateEndpoint.applicationSecurityGroupName
   location: resourceGroup().location
 }
-
-
-// resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' existing = {
-//   name: network.applicationSecurityGroup.name
-// }
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2025-06-01-preview' existing = {
   name: configurationStore.name

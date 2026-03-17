@@ -73,16 +73,6 @@ resource UserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
   tags: {}
 }
 
-// resource federatedIdentitiesResource 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-//   name: fi.federatedidName
-//   parent: UserAssignedIdentity
-//   properties: {
-//     audiences: fi.audiences
-//     issuer: fi.issuerUrl
-//     subject: fi.subjectId
-//   }
-// }
-
 resource webApp 'Microsoft.Web/sites@2025-03-01' = {
   name: workload.webAppName
   location: resourceGroup().location

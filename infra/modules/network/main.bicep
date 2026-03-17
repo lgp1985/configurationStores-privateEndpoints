@@ -9,32 +9,6 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2025-05-0
   }
 }
 
-// resource ApplicationSecurityGroup 'Microsoft.Network/applicationSecurityGroups@2025-05-01' = {
-//   name: network.applicationSecurityGroup.name
-//   location: resourceGroup().location
-// }
-
-// resource allowPrivateEndpointAccess 'Microsoft.Network/networkSecurityGroups/securityRules@2025-05-01' = {
-//   parent: networkSecurityGroup
-//   name: network.applicationSecurityGroup.securityRules.name
-//   properties: {
-//     access: 'Allow'
-//     destinationApplicationSecurityGroups: [
-//       {
-//         id: ApplicationSecurityGroup.id
-//       }
-//     ]
-//     destinationPortRanges: network.applicationSecurityGroup.securityRules.destinationPortRanges
-//     direction: 'Inbound'
-//     priority: network.applicationSecurityGroup.securityRules.priority
-//     protocol: 'Tcp'
-//     sourceAddressPrefixes: network.applicationSecurityGroup.securityRules.sourceAddressPrefixes
-//     sourcePortRanges: [
-//       '*'
-//     ]
-//   }
-// }
-
 resource routeTable 'Microsoft.Network/routeTables@2025-05-01' = {
   name: network.routeTablesName
   location: resourceGroup().location
