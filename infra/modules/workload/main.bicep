@@ -170,6 +170,9 @@ module privateEndpoint './private-endpoint.bicep' = {
     configurationStoreResourceGroupName: workload.resourceGroupName
     configurationStore: workload.configurationStore
   }
+  dependsOn: [
+    appConfig
+  ]
 }
 
 resource webAppAppSettings 'Microsoft.Web/sites/config@2025-03-01' = {
