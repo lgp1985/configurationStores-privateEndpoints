@@ -151,6 +151,31 @@ resource configurationStore 'Microsoft.AppConfiguration/configurationStores@2025
   }
 }
 
+resource configurationStoreMessageKey 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  parent: configurationStore
+  name: 'SampleApp:Settings:Message'
+  properties: {
+    value: 'Hello from Azure App Configuration.'
+    tags: {
+      source: 'bicep-sample'
+    }
+  }
+}
+
+resource configurationStoreKeyVaultReferenceKey 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  parent: configurationStore
+  name: 'SampleApp:Settings:KeyVaultMessage'
+  properties: {
+    value: string({
+      uri: secret.properties.secretUri
+    })
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    tags: {
+      source: 'bicep-sample'
+    }
+  }
+}
+
 resource roleAppConfigurationDataReaderUserAssignedIdentity 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(configurationStore.id, UserAssignedIdentity.id, '516239f1-63e1-4d78-a4de-a74fb236a071') // App Configuration Data Reader
   scope: configurationStore
