@@ -92,7 +92,7 @@ resource webApp 'Microsoft.Web/sites@2025-03-01' = {
       use32BitWorkerProcess: false
       ftpsState: 'FtpsOnly'
       http20Enabled: true
-      healthCheckPath: '/'
+      healthCheckPath: '/healthz'
     }
     virtualNetworkSubnetId: virtualNetwork_snetKvWeb.id
     httpsOnly: true
