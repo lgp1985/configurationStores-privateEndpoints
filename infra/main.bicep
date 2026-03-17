@@ -36,6 +36,9 @@ module workloadDeployment './modules/workload/main.bicep' = {
     workload: workload
     network: network
   }
+  dependsOn: [
+    networkDeployment
+  ]
 }
 @description('The GitHub Actions run ID for this deployment, same as input deployment name split by "-" and taking the last part')
 output githubRunId string = githubRun_id
