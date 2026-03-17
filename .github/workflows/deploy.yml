@@ -46,7 +46,9 @@ jobs:
           template-file: infra/main.bicep
           parameters-file: infra/main.bicepparam
           parameters: |
-            deploymentPrincipalObjectId=${{ steps.deployment-principal.outputs.object_id }}
+            {
+              "deploymentPrincipalObjectId": "${{ steps.deployment-principal.outputs.object_id }}"
+            }
 
       - name: Resolve deployment outputs
         id: deployment-outputs
