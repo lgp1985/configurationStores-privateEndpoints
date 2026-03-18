@@ -5,16 +5,22 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using OpenTelemetry.Resources;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+});
 
 //https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=aspnetcore
 builder.Services.AddOpenTelemetry()
 .UseAzureMonitor()
-.ConfigureResource(rb => rb.AddAttributes(new Dictionary<string, object> {
-            { "service.name", Environment.GetEnvironmentVariable("SERVICE_NAME")! },
-        { "service.namespace", Environment.GetEnvironmentVariable("SERVICE_NAMESPACE")! },
-        { "service.instance.id", Environment.GetEnvironmentVariable("SERVICE_INSTANCE_ID")!}}.Where(d => d.Value is not null).ToDictionary()));
+    .ConfigureResource(rb => rb.AddAttributes(new Dictionary<string, object> {
+                { "service.name", Environment.GetEnvironmentVariable("SERVICE_NAME")! },
+            { "service.namespace", Environment.GetEnvironmentVariable("SERVICE_NAMESPACE")! },
+            { "service.instance.id", Environment.GetEnvironmentVariable("SERVICE_INSTANCE_ID")!}}.Where(d => d.Value is not null).ToDictionary()));
 
 var credential = CreateCredential(builder.Environment, builder.Configuration);
 builder.Services.AddSingleton<TokenCredential>(credential);
@@ -63,40 +69,27 @@ app.MapGet("/", async (IConfiguration configuration, IHostEnvironment environmen
         && !string.IsNullOrWhiteSpace(keyVaultSecret.Value)
         && string.Equals(appServiceKeyVaultReferenceValue, keyVaultSecret.Value, StringComparison.Ordinal);
 
-    return Results.Ok(new
-    {
-        application = "AppConfigKeyVaultSample",
-        environment = environment.EnvironmentName,
-        endpoints = new
-        {
-            appConfiguration = configuration["Endpoints:AppConfiguration"],
-            keyVault = configuration["KeyVault:VaultUri"]
-        },
-        appConfiguration = new
-        {
+    return TypedResults.Ok(new AppConfigKeyVaultResponse(
+        "AppConfigKeyVaultSample",
+        environment.EnvironmentName,
+        new EndpointsResponse(
+            configuration["Endpoints:AppConfiguration"],
+            configuration["KeyVault:VaultUri"]),
+        new AppConfigurationResponse(
             messageKey,
-            message = configuration[messageKey] ?? "No App Configuration value was found for the configured message key.",
+            configuration[messageKey] ?? "No App Configuration value was found for the configured message key.",
             keyVaultReferenceKey,
-            keyVaultReferenceValue = configuration[keyVaultReferenceKey] ?? "No App Configuration Key Vault reference was found for the configured key."
-        },
-        keyVault = new
-        {
-            keyVaultSecret.SecretName,
+            configuration[keyVaultReferenceKey] ?? "No App Configuration Key Vault reference was found for the configured key."),
+        keyVaultSecret,
+        new ComparisonResponse(
+            configuration["KeyVault:SecretName"],
             keyVaultSecret.Value,
-            keyVaultSecret.Error
-        },
-        comparison = new
-        {
-            directSecretName = configuration["KeyVault:SecretName"],
-            directSecretValue = keyVaultSecret.Value,
-            appServiceKeyVaultReferenceKey = "secret:temp1",
+            "secret:temp1",
             appServiceKeyVaultReferenceValue,
-            valuesMatch
-        }
-    });
+            valuesMatch)));
 });
 
-app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/healthz", () => TypedResults.Ok(new HealthResponse("ok")));
 
 app.Run();
 
@@ -194,8 +187,10 @@ sealed class AppConfigurationBootstrapper
 
             logger.LogInformation("Ensured Azure App Configuration setting {MessageKey}.", messageKey);
 
+            var keyVaultReferencePayload = new KeyVaultReferencePayload(keyVaultSecretUri);
+
             await client.SetConfigurationSettingAsync(
-                new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(new { uri = keyVaultSecretUri }))
+                new ConfigurationSetting(keyVaultReferenceKey, JsonSerializer.Serialize(keyVaultReferencePayload, AppJsonSerializerContext.Default.KeyVaultReferencePayload))
                 {
                     ContentType = KeyVaultReferenceContentType
                 },
@@ -223,4 +218,39 @@ sealed class AppConfigurationBootstrapper
 
         return $"{vaultUri.TrimEnd('/')}/secrets/{secretName}";
     }
+}
+
+sealed record AppConfigKeyVaultResponse(
+    string Application,
+    string Environment,
+    EndpointsResponse Endpoints,
+    AppConfigurationResponse AppConfiguration,
+    KeyVaultSecretResult KeyVault,
+    ComparisonResponse Comparison);
+
+sealed record EndpointsResponse(string? AppConfiguration, string? KeyVault);
+
+sealed record AppConfigurationResponse(
+    string MessageKey,
+    string Message,
+    string KeyVaultReferenceKey,
+    string KeyVaultReferenceValue);
+
+sealed record ComparisonResponse(
+    string? DirectSecretName,
+    string? DirectSecretValue,
+    string AppServiceKeyVaultReferenceKey,
+    string? AppServiceKeyVaultReferenceValue,
+    bool ValuesMatch);
+
+sealed record HealthResponse(string Status);
+
+sealed record KeyVaultReferencePayload(string Uri);
+
+[JsonSerializable(typeof(AppConfigKeyVaultResponse))]
+[JsonSerializable(typeof(HealthResponse))]
+[JsonSerializable(typeof(KeyVaultReferencePayload))]
+[JsonSerializable(typeof(KeyVaultSecretResult))]
+internal partial class AppJsonSerializerContext : JsonSerializerContext
+{
 }
